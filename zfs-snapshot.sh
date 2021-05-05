@@ -26,8 +26,7 @@ if [ "$#" -gt 0 ]; then
  
   if echo "$str_CurrentArgument" |grep -q "snapname"; then
    str_SnapshotName=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
-  fi
- 
+  fi 
  
   if echo "$str_CurrentArgument" |grep -q "replicatedest"; then
    str_ReplicateDestination=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
@@ -79,7 +78,7 @@ else
  echo "-hold=:............Optional, lock snapshot with this hold string. Snapshot creation and destroy will use this string."
  echo "-skip-create:......Optional, skips snapshot creation."
  echo "-recursive:........Optional, snapshot create, hold, and destroy are used with the '-r' argument."
- echo "-kvm=:.............Optional, using this will try to save a VM running as root before performing the snapshot. Domain name must be specified here."
+ echo "-kvm=:.............Optional, specify the domain name and this will try to save a running VM (inside dataset previously specified) as root before performing the snapshot."
  echo "-logging=:.........Optional, 0: No logs, no screen output. 1: No logs, output to screen. 2: Output sent to logger, no screen output."
  echo " "
  echo "Defaults: snapshot name is used for retention, logging is set to '1'. Replication and retention are optional, but snapshot creation is default."
