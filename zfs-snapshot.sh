@@ -3,7 +3,7 @@
 #spmfox@foxwd.com
  
 opt_Logging="1"
-var_UUID=$(date +%N)
+var_UUID=$(date +%s%3N)
 dir_TemporaryDirectory="/dev/shm"
  
 var_ArgumentCounter=1
