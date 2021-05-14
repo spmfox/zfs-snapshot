@@ -250,8 +250,8 @@ function fn_CreateSnapshot {
 function fn_Replication {
  if [ -n "$str_ReplicateDestination" ]; then
   echo "$var_UUID - $str_ReplicateDestination" > "$dir_TemporaryDirectory"/"$var_UUID".replication
-  str_FirstSnapshot=$(zfs list -t all |grep "$str_SelectedDataset"@ |grep -w "$str_SnapshotName" |head -n 1 |awk '{print $1}')
-  str_LastSnapshot=$(zfs list -t all |grep "$str_SelectedDataset"@ |grep -w "$str_SnapshotName" |tail -n 1 |awk '{print $1}')
+  str_FirstSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" |grep -w "$str_SnapshotName" |head -n 1 |awk '{print $1}')
+  str_LastSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" |grep -w "$str_SnapshotName" |tail -n 1 |awk '{print $1}')
   if [ "$str_FirstSnapshot" = "$str_SelectedDataset"@"$var_DateTime"-"$str_SnapshotName" ]; then
    if [ -n "$str_ReplicateHost" ]; then
     str_ReplicateTransferSize=$(zfs send -nv -R "$str_FirstSnapshot" |grep "total" |awk -F"is" '{print $2}')
@@ -298,9 +298,9 @@ function fn_DeleteSnapshots {
   str_DeleteSnapshotVerifyDataset=$(zfs list |grep "$str_SelectedDataset")
   if [ -n "$str_DeleteSnapshotVerifyDataset" ]; then
    if [ -n "$str_RetainGrep" ]; then
-    str_SnapshotsPendingDeletion=$(diff <(zfs list -t all |grep "$str_SelectedDataset"@ |grep "$str_RetainGrep" |tail -n "$var_RetentionPeriod") <(zfs list -t all |grep "$str_SelectedDataset"@ |grep "$str_RetainGrep") |grep ">" |awk '{print $2}' |paste -sd " " -)
+    str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" |grep "$str_RetainGrep" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot "$str_SelectedDataset" |grep "$str_RetainGrep") |grep ">" |awk '{print $2}' |paste -sd " " -)
    else
-    str_SnapshotsPendingDeletion=$(diff <(zfs list -t all |grep "$str_SelectedDataset"@ |grep -w "$str_SnapshotName" |tail -n "$var_RetentionPeriod") <(zfs list -t all |grep "$str_SelectedDataset"@ |grep -w "$str_SnapshotName") |grep ">" |awk '{print $2}' |paste -sd " " -)
+    str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" |grep -w "$str_SnapshotName" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot  "$str_SelectedDataset" |grep -w "$str_SnapshotName") |grep ">" |awk '{print $2}' |paste -sd " " -)
    fi
    var_SnapshotsPendingDeletionCount=$(echo "$str_SnapshotsPendingDeletion" |awk '{print NF}' | sort -nu | tail -n 1)
    str_OutputText="INFO: Number of snapshots found to destroy: $var_SnapshotsPendingDeletionCount."
