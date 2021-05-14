@@ -219,27 +219,27 @@ function fn_CreateSnapshot {
 function fn_Replication {
  if [ -n "$str_ReplicateDestination" ]; then
   echo "$var_UUID - $str_ReplicateDestination" > "$dir_TemporaryDirectory"/"$var_UUID".replication
-  str_FirstSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" |grep -w "$str_SnapshotName" |head -n 1 |awk '{print $1}')
-  str_LastSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" |grep -w "$str_SnapshotName" |tail -n 1 |awk '{print $1}')
+  str_FirstSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |head -n 1 |awk '{print $1}')
+  str_LastSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |tail -n 1 |awk '{print $1}')
   if [ "$str_FirstSnapshot" = "$str_SelectedDataset"@"$var_DateTime"-"$str_SnapshotName" ]; then
    if [ -n "$str_ReplicateHost" ]; then
-    str_ReplicateTransferSize=$(zfs send -nv -R "$str_FirstSnapshot" |grep "total" |awk -F"is" '{print $2}')
+    str_ReplicateTransferSize=$(zfs send -nv -R "$str_FirstSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
     fn_Log "INFO: Attempting ssh replication: 'zfs send -R $str_FirstSnapshot |ssh $str_ReplicateHost sudo zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-    str_ReplicateTransferVerify=$(zfs send -R "$str_FirstSnapshot" |ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
+    str_ReplicateTransferVerify=$(zfs send -R "$str_FirstSnapshot" 2>&1 |ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
    else
-    str_ReplicateTransferSize=$(zfs send -nv -R "$str_FirstSnapshot" |grep "total" |awk -F"is" '{print $2}')
+    str_ReplicateTransferSize=$(zfs send -nv -R "$str_FirstSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
     fn_Log "INFO: Attempting local replication: 'zfs send -R $str_FirstSnapshot |zfs receive -Fu $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-    str_ReplicateTransferVerify=$(zfs send -R "$str_FirstSnapshot" |zfs receive -Fu "$str_ReplicateDestination" 2>&1)
+    str_ReplicateTransferVerify=$(zfs send -R "$str_FirstSnapshot" 2>&1 |zfs receive -Fu "$str_ReplicateDestination" 2>&1)
    fi
   else
    if [ -n "$str_ReplicateHost" ]; then
-    str_ReplicateTransferSize=$(zfs send -nv -R -I "$str_FirstSnapshot" "$str_LastSnapshot" |grep "total" |awk -F"is" '{print $2}')
+    str_ReplicateTransferSize=$(zfs send -nv -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
     fn_Log "INFO: Attempting ssh incremental replication: 'zfs send -R -I $str_FirstSnapshot $str_LastSnapshot | ssh $str_ReplicateHost sudo zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-    str_ReplicateTransferVerify=$(zfs send -R -I "$str_FirstSnapshot" "$str_LastSnapshot" | ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
+    str_ReplicateTransferVerify=$(zfs send -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 | ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
    else
-    str_ReplicateTransferSize=$(zfs send -nv -R -I "$str_FirstSnapshot" "$str_LastSnapshot" |grep "total" |awk -F"is" '{print $2}')
+    str_ReplicateTransferSize=$(zfs send -nv -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
     fn_Log "INFO: Attempting local incremental replication: 'zfs send -R -I $str_FirstSnapshot $str_LastSnapshot |zfs receive -Fu $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-    str_ReplicateTransferVerify=$(zfs send -R -I "$str_FirstSnapshot" "$str_LastSnapshot" |zfs receive -Fu "$str_ReplicateDestination" 2>&1)
+    str_ReplicateTransferVerify=$(zfs send -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 |zfs receive -Fu "$str_ReplicateDestination" 2>&1)
    fi
   fi
   if [ -n "$str_ReplicateTransferVerify" ]; then
@@ -258,12 +258,12 @@ function fn_Replication {
 function fn_DeleteSnapshots {
  var_SnapshotDeleteCounter="1"
  if [ -n "$var_RetentionPeriod" ]; then
-  str_DeleteSnapshotVerifyDataset=$(zfs list |grep "$str_SelectedDataset")
+  str_DeleteSnapshotVerifyDataset=$(zfs list 2>&1 |grep "$str_SelectedDataset")
   if [ -n "$str_DeleteSnapshotVerifyDataset" ]; then
    if [ -n "$str_RetainGrep" ]; then
-    str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" |grep "$str_RetainGrep" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot "$str_SelectedDataset" |grep "$str_RetainGrep") |grep ">" |awk '{print $2}' |paste -sd " " -)
+    str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep "$str_RetainGrep" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep "$str_RetainGrep") |grep ">" |awk '{print $2}' |paste -sd " " -)
    else
-    str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" |grep -w "$str_SnapshotName" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot  "$str_SelectedDataset" |grep -w "$str_SnapshotName") |grep ">" |awk '{print $2}' |paste -sd " " -)
+    str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot  "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName") |grep ">" |awk '{print $2}' |paste -sd " " -)
    fi
    var_SnapshotsPendingDeletionCount=$(echo "$str_SnapshotsPendingDeletion" |awk '{print NF}' | sort -nu | tail -n 1)
    fn_Log "INFO: Number of snapshots found to destroy: $var_SnapshotsPendingDeletionCount."
