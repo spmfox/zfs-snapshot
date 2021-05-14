@@ -121,16 +121,6 @@ trap fn_ControlC SIGINT
  
  
  
-function fn_CheckPermissions {
- strPermissionValidation=$(zfs list |grep "Permission")
-  if [ -n "$strPermissionValidation" ]; then
-   fn_Log "FATAL: No permissions for zfs commands."
-   exit
-  fi
-}
- 
- 
- 
 function fn_CheckReplicationDuplicate {
  if [ -n "$str_ReplicateDestination" ]; then
   str_CheckOngoingMirror=$(cat $dir_TemporaryDirectory/*.replication 2> /dev/null |grep -w "$str_ReplicateDestination")
@@ -317,7 +307,6 @@ function fn_DeleteSnapshots {
  
  
  
-fn_CheckPermissions
 fn_CheckReplicationDuplicate
 fn_CheckReplicationConnection
 fn_CreateSnapshot
