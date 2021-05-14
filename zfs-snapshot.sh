@@ -309,7 +309,7 @@ function fn_DeleteSnapshots {
     let var_SnapshotDeleteCounter+=1
    done
   else
-   fn_Log"FATAL: Dataset is not valid: $str_SelectedDataset."
+   fn_Log "FATAL: Dataset is not valid: $str_SelectedDataset."
    exit
   fi
  fi
