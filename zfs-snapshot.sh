@@ -258,7 +258,7 @@ function fn_Replication {
 function fn_DeleteSnapshots {
  var_SnapshotDeleteCounter="1"
  if [ -n "$var_RetentionPeriod" ]; then
-  str_DeleteSnapshotVerifyDataset=$(zfs list 2>&1 |grep "$str_SelectedDataset")
+  str_DeleteSnapshotVerifyDataset=$(zfs list $str_SelectedDataset 2>&1)
   if [ -n "$str_DeleteSnapshotVerifyDataset" ]; then
    if [ -n "$str_RetainGrep" ]; then
     str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep "$str_RetainGrep" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep "$str_RetainGrep") |grep ">" |awk '{print $2}' |paste -sd " " -)
