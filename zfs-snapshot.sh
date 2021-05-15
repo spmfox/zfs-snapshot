@@ -35,6 +35,10 @@ if [ "$#" -gt 0 ]; then
   if echo "$str_CurrentArgument" |grep -q "replicatehost"; then
    str_ReplicateHost=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
   fi
+
+  if echo "$str_CurrentArgument" |grep -q "validatehost"; then
+   str_ValidateHost=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
+  fi
  
   if echo "$str_CurrentArgument" |grep -q "hold"; then
    str_SnapshotHold=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
@@ -75,6 +79,7 @@ else
  echo "-grep=:............Optional, this string will be grepped for retention instead of the snapshot name."
  echo "-replicatedest=:...Optional, specify the destination pool/dataset for replication."
  echo "-replicatehost=:...Optional, for remote replication - will be used for SSH. Use of a .ssh/config file is recommended."
+ echo "-validatehost=.....Optional, use Netcat to check SSH before anything happens. Expects host:port."
  echo "-hold=:............Optional, lock snapshot with this hold string. Snapshot creation and destroy will use this string."
  echo "-skip-create:......Optional, skips snapshot creation."
  echo "-recursive:........Optional, snapshot create, hold, and destroy are used with the '-r' argument."
@@ -133,19 +138,33 @@ function fn_CheckReplicationDuplicate {
  
  
  
-function fn_CheckReplicationConnection {
- if [ -n "$str_ReplicateHost" ]; then
-  if ssh -q -o "BatchMode=yes" -o "ConnectTimeout=5" "$str_ReplicateHost" "echo 2>&1"; then
-   fn_Log "INFO: SSH connection to $str_ReplicateHost has been verified."
+function fn_ValidateHost {
+ if [ -n "$str_ValidateHost" ]; then
+  fn_Log "INFO: Attempting to validate SSH connection to $str_ValidateHost..."
+  if which nc >/dev/null 2>&1 ; then
+   str_ValidateHost1=$(echo $str_ValidateHost |awk -F ":" '{print $1}')
+   str_ValidateHost2=$(echo $str_ValidateHost |awk -F ":" '{print $2}')
+   if [ -n "$str_ValidateHost1" ] && [ -n "$str_ValidateHost2" ]; then
+    str_ValidateHostCheck=$(nc -w 5 "$str_ValidateHost1" "$str_ValidateHost2" 2>&1 |grep -i SSH)
+    if [ -n "$str_ValidateHostCheck" ]; then
+     fn_Log "INFO: SSH is available at $str_ValidateHost1:$str_ValidateHost2."
+    else
+     fn_Log "FATAL: SSH does not seem available at $str_ValidateHost1:$str_ValidateHost2."
+     exit
+    fi
+   else
+    fn_Log "FATAL: Could not parse validatehost=$str_ValidateHost."
+    exit
+   fi
   else
-   fn_Log "FATAL: SSH connection to $str_ReplicateHost has FAILED. Script will exit without making any changes."
+   fn_Log "FATAL: nc (netcat) command not available on this system."
    exit
   fi
  fi
 }
- 
- 
- 
+
+
+
 function fn_CreateSnapshot {
  var_DateTime=$(date +%Y-%m-%d_%T)
  if [ -z "$str_SkipSnapshotCreation" ]; then
@@ -308,7 +327,7 @@ function fn_DeleteSnapshots {
  
  
 fn_CheckReplicationDuplicate
-fn_CheckReplicationConnection
+fn_ValidateHost
 fn_CreateSnapshot
 fn_Replication
 fn_DeleteSnapshots
