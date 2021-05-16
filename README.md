@@ -28,6 +28,7 @@ Here is an example for remote replication:
 | -grep= | Optional | This string will be grepped for retention instead of the snapshot name. |
 | -replicatedest= | Optional | Specify the destination pool/dataset for replication. |
 | -replicatehost= | Optional | For remote replication - will be used for SSH. Use of a .ssh/config file is recommended. |
+| -validatehost= |  Optional | Use Netcat to check SSH before anything happens. Expects host:port. |
 | -hold= | Optional | Lock snapshot with this hold string. Snapshot creation and destroy will use this string. |
 | -skip-create | Optional | Skips snapshot creation. |
 | -recursive | Optional | Snapshot create, hold, and destroy are used with the '-r' argument. |
