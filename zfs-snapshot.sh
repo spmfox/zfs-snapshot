@@ -245,12 +245,12 @@ function fn_Replication {
    if [ -n "$str_ReplicateHost" ]; then
     if [ -n "$str_ReplicateCheckEncryption" ]; then
      str_ReplicateTransferSize=$(zfs send -w -nv -R "$str_FirstSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
-     fn_Log "INFO: Attempting encrypted ssh replication: 'zfs send -w -R $str_FirstSnapshot |ssh $str_ReplicateHost sudo zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-     str_ReplicateTransferVerify=$(zfs send -w -R "$str_FirstSnapshot" 2>&1 |ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
+     fn_Log "INFO: Attempting encrypted ssh replication: 'zfs send -w -R $str_FirstSnapshot |ssh $str_ReplicateHost zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
+     str_ReplicateTransferVerify=$(zfs send -w -R "$str_FirstSnapshot" 2>&1 |ssh "$str_ReplicateHost" zfs receive -F "$str_ReplicateDestination" 2>&1)
     else
      str_ReplicateTransferSize=$(zfs send -nv -R "$str_FirstSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
-     fn_Log "INFO: Attempting ssh replication: 'zfs send -R $str_FirstSnapshot |ssh $str_ReplicateHost sudo zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-     str_ReplicateTransferVerify=$(zfs send -R "$str_FirstSnapshot" 2>&1 |ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
+     fn_Log "INFO: Attempting ssh replication: 'zfs send -R $str_FirstSnapshot |ssh $str_ReplicateHost zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
+     str_ReplicateTransferVerify=$(zfs send -R "$str_FirstSnapshot" 2>&1 |ssh "$str_ReplicateHost" zfs receive -F "$str_ReplicateDestination" 2>&1)
     fi
    else
     if [ -n "$str_ReplicateCheckEncryption" ]; then
@@ -267,12 +267,12 @@ function fn_Replication {
    if [ -n "$str_ReplicateHost" ]; then
     if [ -n "$str_ReplicateCheckEncryption" ]; then
      str_ReplicateTransferSize=$(zfs send -w -nv -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
-     fn_Log "INFO: Attempting encrypted ssh incremental replication: 'zfs send -w -R -I $str_FirstSnapshot $str_LastSnapshot | ssh $str_ReplicateHost sudo zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-     str_ReplicateTransferVerify=$(zfs send -w -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 | ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
+     fn_Log "INFO: Attempting encrypted ssh incremental replication: 'zfs send -w -R -I $str_FirstSnapshot $str_LastSnapshot | ssh $str_ReplicateHost zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
+     str_ReplicateTransferVerify=$(zfs send -w -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 | ssh "$str_ReplicateHost" zfs receive -F "$str_ReplicateDestination" 2>&1)
     else
      str_ReplicateTransferSize=$(zfs send -nv -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
-     fn_Log "INFO: Attempting ssh incremental replication: 'zfs send -R -I $str_FirstSnapshot $str_LastSnapshot | ssh $str_ReplicateHost sudo zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
-     str_ReplicateTransferVerify=$(zfs send -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 | ssh "$str_ReplicateHost" sudo zfs receive -F "$str_ReplicateDestination" 2>&1)
+     fn_Log "INFO: Attempting ssh incremental replication: 'zfs send -R -I $str_FirstSnapshot $str_LastSnapshot | ssh $str_ReplicateHost zfs receive -F $str_ReplicateDestination', estimated total size:$str_ReplicateTransferSize."
+     str_ReplicateTransferVerify=$(zfs send -R -I "$str_FirstSnapshot" "$str_LastSnapshot" 2>&1 | ssh "$str_ReplicateHost" zfs receive -F "$str_ReplicateDestination" 2>&1)
     fi
    else
     if [ -n "$str_ReplicateCheckEncryption" ]; then
