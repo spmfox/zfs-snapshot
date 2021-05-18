@@ -117,7 +117,7 @@ function fn_Log {
 function fn_ControlC {
  fn_Log "FATAL: CTRL-C or other kill method detected, please check logs on how to clean up state."
  rm -I "$dir_TemporaryDirectory"/"$var_UUID".replication 2> /dev/null
- exit
+ exit 1
 }
  
  
@@ -132,7 +132,7 @@ function fn_CheckReplicationDuplicate {
  fi
  if [ -n "$str_CheckOngoingMirror" ]; then
   fn_Log "FATAL: Another replication job is running for this destination: ($str_CheckOngoingMirror)."
-  exit
+  exit 1
  fi
 }
  
@@ -150,15 +150,15 @@ function fn_ValidateHost {
      fn_Log "INFO: SSH is available at $str_ValidateHost1:$str_ValidateHost2."
     else
      fn_Log "FATAL: SSH does not seem available at $str_ValidateHost1:$str_ValidateHost2."
-     exit
+     exit 1
     fi
    else
     fn_Log "FATAL: Could not parse validatehost=$str_ValidateHost."
-    exit
+    exit 1
    fi
   else
    fn_Log "FATAL: nc (netcat) command not available on this system."
-   exit
+   exit 1
   fi
  fi
 }
@@ -184,7 +184,7 @@ function fn_CreateSnapshot {
       str_KVMsaveVerification=$(virsh save $str_KVM /$str_SelectedDataset/zfs-auto-snapshot.sav 2>&1 |grep "error" |tr '\n' ' ')
       if [ -n "$str_KVMsaveVerification" ]; then
        fn_Log "FATAL: KVM reported an error: $str_KVMsaveVerification."
-       exit
+       exit 1
       fi
      fi
      fn_Log "INFO: Attempting snapshot creation: 'zfs snapshot $str_SelectedDataset@$var_DateTime-$str_SnapshotName'."
@@ -209,7 +209,7 @@ function fn_CreateSnapshot {
      str_KVMrestoreVerification=$(virsh restore /$str_SelectedDataset/zfs-auto-snapshot.sav 2>&1 |grep "error" |tr '\n' ' ')
      if [ -n "$str_KVMrestoreVerification" ]; then
       fn_Log "FATAL: KVM reported an error: $str_KVMrestreVerification."
-      exit
+      exit 1
      else
       fn_Log "INFO: KVM restore successful, attempting to remove the save file: '/$str_SelectedDataset/zfs-auto-snapshot.sav'."
       str_KVMrestoreDeleteVerification=$(rm -fI /$str_SelectedDataset/zfs-auto-snapshot.sav 2>&1)
@@ -222,11 +222,11 @@ function fn_CreateSnapshot {
     fi
    else
     fn_Log "FATAL: Dataset is not valid: $str_SelectedDataset."
-    exit
+    exit 1
    fi
   else
    fn_Log "FATAL: dataset and snapname are required for snapshot creation."
-   exit
+   exit 1
   fi
  else
   fn_Log "INFO: Creation snapshot skipped per user argument."
@@ -289,7 +289,7 @@ function fn_Replication {
   if [ -n "$str_ReplicateTransferVerify" ]; then
    rm -I "$dir_TemporaryDirectory"/"$var_UUID".replication 2> /dev/null
    fn_Log "FATAL: Replication failed, reason: $str_ReplicateTransferVerify."
-   exit
+   exit 1
   else
    rm -I "$dir_TemporaryDirectory"/"$var_UUID".replication 2> /dev/null
    fn_Log "INFO: Replication successful."
@@ -344,7 +344,7 @@ function fn_DeleteSnapshots {
    done
   else
    fn_Log "FATAL: Dataset is not valid: $str_SelectedDataset."
-   exit
+   exit 1
   fi
  fi
 }
