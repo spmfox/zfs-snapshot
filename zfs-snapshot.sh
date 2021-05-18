@@ -319,7 +319,7 @@ function fn_DeleteSnapshots {
       fn_Log "INFO: Attempting recursive snapshot release: 'zfs release -r $str_SnapshotHold $str_CurrentSnapshotPendingDeletion'."
       str_ReleaseSnapshotVerification=$(zfs release -r "$str_SnapshotHold" "$str_CurrentSnapshotPendingDeletion" 2>&1)
      else
-      fn_Log"INFO: Attempting snapshot release: 'zfs release $str_SnapshotHold $str_CurrentSnapshotPendingDeletion'."
+      fn_Log "INFO: Attempting snapshot release: 'zfs release $str_SnapshotHold $str_CurrentSnapshotPendingDeletion'."
       str_ReleaseSnapshotVerification=$(zfs release "$str_SnapshotHold" "$str_CurrentSnapshotPendingDeletion" 2>&1)
      fi
      if [ -z "$str_ReleaseSnapshotVerification" ]; then
