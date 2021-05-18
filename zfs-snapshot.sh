@@ -323,7 +323,7 @@ function fn_DeleteSnapshots {
       str_ReleaseSnapshotVerification=$(zfs release "$str_SnapshotHold" "$str_CurrentSnapshotPendingDeletion" 2>&1)
      fi
      if [ -z "$str_ReleaseSnapshotVerification" ]; then
-      fn_Log"INFO: Snapshot release successful."
+      fn_Log "INFO: Snapshot release successful."
      else
       fn_Log "ERROR: Snapshot release may have failed, reason: $str_ReleaseSnapshotVerification."
      fi
