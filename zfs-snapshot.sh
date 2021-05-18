@@ -145,7 +145,7 @@ function fn_ValidateHost {
    str_ValidateHost1=$(echo $str_ValidateHost |awk -F ":" '{print $1}')
    str_ValidateHost2=$(echo $str_ValidateHost |awk -F ":" '{print $2}')
    if [ -n "$str_ValidateHost1" ] && [ -n "$str_ValidateHost2" ]; then
-    str_ValidateHostCheck=$(nc -w 5 "$str_ValidateHost1" "$str_ValidateHost2" 2>&1 |grep -i SSH)
+    str_ValidateHostCheck=$(timeout 5 nc -w 5 "$str_ValidateHost1" "$str_ValidateHost2" 2>&1 |grep -i SSH)
     if [ -n "$str_ValidateHostCheck" ]; then
      fn_Log "INFO: SSH is available at $str_ValidateHost1:$str_ValidateHost2."
     else
@@ -241,7 +241,7 @@ function fn_Replication {
   str_ReplicateCheckEncryption=$(zfs get encryption "$str_SelectedDataset" -H -o value 2>&1 |grep -v -i off)
   str_FirstSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |head -n 1 |awk '{print $1}')
   str_LastSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |tail -n 1 |awk '{print $1}')
-  if [ "$str_FirstSnapshot" = "$str_SelectedDataset"@"$var_DateTime"-"$str_SnapshotName" ]; then
+  if [ "$str_FirstSnapshot" = "$str_LastSnapshot" ]; then
    if [ -n "$str_ReplicateHost" ]; then
     if [ -n "$str_ReplicateCheckEncryption" ]; then
      str_ReplicateTransferSize=$(zfs send -w -nv -R "$str_FirstSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
