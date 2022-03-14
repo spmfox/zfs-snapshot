@@ -169,7 +169,7 @@ function fn_CreateSnapshot {
  var_DateTime=$(date +%Y-%m-%d_%T)
  if [ -z "$str_SkipSnapshotCreation" ]; then
   if [ -n "$str_SelectedDataset" ] && [ -n "$str_SnapshotName" ]; then
-   str_CreateSnapshotVerifyDataset=$(zfs list |grep "$str_SelectedDataset")
+   str_CreateSnapshotVerifyDataset=$(zfs list $str_SelectedDataset 2>&1 |grep NAME)
    if [ -n "$str_CreateSnapshotVerifyDataset" ]; then
     if [ -n "$str_RecursiveSnapshot" ]; then
      fn_Log "INFO: Attempting recursive snapshot creation: 'zfs snapshot -r $str_SelectedDataset@$var_DateTime-$str_SnapshotName'."
@@ -302,7 +302,7 @@ function fn_Replication {
 function fn_DeleteSnapshots {
  var_SnapshotDeleteCounter="1"
  if [ -n "$var_RetentionPeriod" ]; then
-  str_DeleteSnapshotVerifyDataset=$(zfs list $str_SelectedDataset 2>&1)
+  str_DeleteSnapshotVerifyDataset=$(zfs list $str_SelectedDataset 2>&1 |grep NAME)
   if [ -n "$str_DeleteSnapshotVerifyDataset" ]; then
    if [ -n "$str_RetainGrep" ]; then
     str_SnapshotsPendingDeletion=$(diff <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep "$str_RetainGrep" |tail -n "$var_RetentionPeriod") <(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep "$str_RetainGrep") |grep ">" |awk '{print $2}' |paste -sd " " -)
