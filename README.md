@@ -33,7 +33,7 @@ Here is an example for remote replication:
 | -skip-create | Optional | Skips snapshot creation. |
 | -recursive | Optional | Snapshot create, hold, and destroy are used with the '-r' argument. |
 | -kvm= | Optional | Specify the domain name and this will try to save a running VM (inside dataset previously specified) as root before performing the snapshot. |
-| -rollback Optional | Attempt recursive rollback, used to fix broken destination if a recursive send failed mid-transfer. |
+| -rollback | Optional | Attempt recursive rollback, used to fix broken destination if a recursive send failed mid-transfer. |
 | -logging= | Optional | 0: No logs, no screen output. 1: No logs, output to screen. 2: Output sent to logger, no screen output. |
  
 Defaults: snapshot name is used for retention, logging is set to '1'. Replication and retention are optional, but snapshot creation is default.
