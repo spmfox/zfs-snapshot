@@ -55,6 +55,10 @@ if [ "$#" -gt 0 ]; then
   if echo "$str_CurrentArgument" |grep -q "kvm"; then
    str_KVM=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
   fi
+
+  if echo "$str_CurrentArgument" |grep -q "rollback"; then
+   str_RecursiveRollback="YES"
+  fi
  
   if echo "$str_CurrentArgument" |grep -q "logging"; then
    opt_Logging=$(echo "$str_CurrentArgument" |awk -F"=" '{print $2}')
@@ -84,6 +88,7 @@ else
  echo "-skip-create:......Optional, skips snapshot creation."
  echo "-recursive:........Optional, snapshot create, hold, and destroy are used with the '-r' argument."
  echo "-kvm=:.............Optional, specify the domain name and this will try to save a running VM (inside dataset previously specified) as root before performing the snapshot."
+ echo "-rollback......... Optional, Attempt recursive rollback, used to fix broken destination if a recursive send failed mid-transfer."
  echo "-logging=:.........Optional, 0: No logs, no screen output. 1: No logs, output to screen. 2: Output sent to logger, no screen output."
  echo " "
  echo "Defaults: snapshot name is used for retention, logging is set to '1'. Replication and retention are optional, but snapshot creation is default."
@@ -348,12 +353,51 @@ function fn_DeleteSnapshots {
   fi
  fi
 }
+
+
  
- 
- 
-fn_CheckReplicationDuplicate
-fn_ValidateHost
-fn_CreateSnapshot
-fn_Replication
-fn_DeleteSnapshots
+function fn_RecursiveRollback {
+ var_SnapshotRollbackCounter="1"
+ if [ -n "$str_SelectedDataset" ] && [ -n "$str_SnapshotName" ]; then
+  str_RecursiveRollbackVerifyDataset=$(zfs list $str_SelectedDataset 2>&1 |grep NAME)
+  if [ -n "$str_RecursiveRollbackVerifyDataset" ]; then
+   str_SnapshotsPendingRollback=$(zfs list -t snapshot -r "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |awk '{print $1}' |paste -sd " " -)
+   var_SnapshotsPendingRollbackVerification=$(zfs list -t snapshot -r "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |awk '{print $1}' |awk '{print $1}' |awk -F "@" '{print $2}' |sort |uniq |wc -l)
+   if [ "$var_SnapshotsPendingRollbackVerification" -gt "1" ]; then
+    fn_Log "FATAL: Found more than one snapshot for recursive rollback, check -snapname=."
+    exit 1
+   fi
+   var_SnapshotsPendingRollbackCount=$(echo "$str_SnapshotsPendingRollback" |awk '{print NF}' | sort -nu | tail -n 1)
+   fn_Log "INFO: Number of snapshots found to rollback: $var_SnapshotsPendingRollbackCount."
+   while [ "$var_SnapshotRollbackCounter" -le "$var_SnapshotsPendingRollbackCount" ]; do
+    str_CurrentSnapshotPendingRollback=$(echo "$str_SnapshotsPendingRollback" |awk -v c="$var_SnapshotRollbackCounter" '{print $c}')
+    fn_Log "INFO: Attempting semi-forced snapshot rollback: 'zfs rollback -r $str_CurrentSnapshotPendingRollback'."
+    str_SnapshotRollbackVerification=$(zfs rollback -r "$str_CurrentSnapshotPendingRollback" 2>&1)
+    if [ -z "$str_SnapshotRollbackVerification" ]; then
+     fn_Log "INFO: Snapshot rollback successful."
+    else
+     fn_Log "FATAL: Snapshot rollback failed, reason: $str_SnapshotRollbackVerification."
+     exit 1
+    fi
+    let var_SnapshotRollbackCounter+=1
+   done
+  else
+   fn_Log "FATAL: Dataset is not valid: $str_SelectedDataset."
+   exit 1
+  fi
+ else
+  fn_Log "FATAL: -dataset= and -snapname= are required for recursive rollback."
+  exit 1
+ fi
+}
+
+if [ -n "$str_RecursiveRollback" ]; then
+ fn_RecursiveRollback
+else
+ fn_CheckReplicationDuplicate
+ fn_ValidateHost
+ fn_CreateSnapshot
+ fn_Replication
+ fn_DeleteSnapshots
+fi
 
