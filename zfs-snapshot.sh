@@ -246,7 +246,29 @@ function fn_Replication {
   str_ReplicateCheckEncryption=$(zfs get encryption "$str_SelectedDataset" -H -o value 2>&1 |grep -v -i off)
   str_FirstSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |head -n 1 |awk '{print $1}')
   str_LastSnapshot=$(zfs list -t snapshot "$str_SelectedDataset" 2>&1 |grep -w "$str_SnapshotName" |tail -n 1 |awk '{print $1}')
+
+  str_ReplicationDescriptionBuilder=" "
+  str_ReplicationArgumentsBuilder=" "
+
   if [ "$str_FirstSnapshot" = "$str_LastSnapshot" ]; then
+   # First & last snapshots are the same, so this is the first replication
+   str_ReplicateSnapshots="$str_FirstSnapshot"
+   str_ReplicationDescriptionBuilder="$str_ReplicationDescriptionBuilder initial"
+  else
+   # First & last snapshots are not the same, so this is an incremental snapshot
+   str_ReplicateSnapshots="$str_FirstSnapshot $str_LastSnapshot"
+   str_ReplicationDescriptionBuilder="$str_ReplicationDescriptionBuilder incremental"
+   str_ReplicationArgumentsBuilder="$str_ReplicationArgumentsBuilder -I"
+  fi
+
+  if [ -n "$str_ReplicateCheckEncryption" ]; then
+   # Dataset is encrypted, will attempt to send raw
+   str_ReplicationDescriptionBuilder="$str_ReplicationDescriptionBuilder encrypted"
+   str_ReplicationArgumentsBuilder="$str_ReplicationArgumentsBuilder -w"
+  fi
+
+
+
    if [ -n "$str_ReplicateHost" ]; then
     if [ -n "$str_ReplicateCheckEncryption" ]; then
      str_ReplicateTransferSize=$(zfs send -w -nv -R "$str_FirstSnapshot" 2>&1 |grep "total" |awk -F"is" '{print $2}')
